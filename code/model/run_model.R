@@ -89,7 +89,7 @@ for (model_name in params$models) {
 
     ### Fit Model
     model <- stan(
-      file = paste0("code/stan/", model_name, ".stan"),
+      file = paste0("code/models/stan/", model_name, ".stan"),
       data = stan_data,
       seed = params$seed,
       chains = params$chains,

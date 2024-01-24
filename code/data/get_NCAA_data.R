@@ -13,7 +13,7 @@ df_scores <- data.frame()
 
 df_club <- data.frame()
 
-for (s in c(2023)) {
+for (s in params$seasons) {
   df_scores <- read_csv(paste0("https://masseyratings.com/scores.php?s=cf", s, "&sub=11604&all=1&mode=2&format=1"), col_names = F) |>
     mutate(division = "FBS") |>
     bind_rows(read_csv(paste0("https://masseyratings.com/scores.php?s=cf", s, "&sub=11605&all=1&mode=2&format=1"), col_names = F) |>

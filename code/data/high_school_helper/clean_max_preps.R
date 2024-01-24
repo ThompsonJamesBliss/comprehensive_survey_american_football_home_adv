@@ -224,9 +224,7 @@ df_games_clean <- df_games2 |>
                              "MD",
                              state_away),
          
-         in_state = state_home == state_away,
-         
-         day_of_week = weekdays(as.Date(date))) |>
+         in_state = state_home == state_away) |>
   
   rowwise() |>
   mutate(
@@ -281,7 +279,11 @@ df_games_clean2 <- df_games_clean|>
   mutate(satisfies_cutoff = ifelse(!is.na(satisfies_cutoff_home) & !is.na(satisfies_cutoff_away) & in_state,
                                    T,
                                    F)) |>
-  select(-c("satisfies_cutoff_home", "satisfies_cutoff_away"))
+  select(-c("satisfies_cutoff_home", "satisfies_cutoff_away")) |>
+  select(season, date, location, game_type, home_team, away_team,
+         home_score, away_score,
+         state_home, state_away, lng_home, lat_home, lng_away, lat_away, distance,
+         level, satisfies_cutoff, in_state) 
 
 for(s in params$seasons){
   

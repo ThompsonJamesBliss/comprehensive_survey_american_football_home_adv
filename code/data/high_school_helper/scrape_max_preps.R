@@ -104,15 +104,11 @@ for (season in params$seasons) {
               if (length(text) > 0) {
                 text <- gsub("Mascot", ";mascot:", text)
 
-                text <- gsub("Address", ";address:", text)
-
                 text <- gsub("Colors", ";colors:", text)
 
                 text <- gsub("School Type", ";school_type:", text)
 
                 text <- gsub("Athletic Director", ";athletic_director:", text)
-
-                text <- gsub("Phone", ";phone:", text)
 
                 text <- str_split(string = text, pattern = ";")[[1]]
               } else {
@@ -120,11 +116,32 @@ for (season in params$seasons) {
               }
 
 
+              club_page_links <- club_page |>
+                html_nodes("a") |>
+                html_attr("href")
+              
+              address_link <- unique(club_page_links[grepl("google.com/maps", club_page_links)])
 
-
+              if(length(address_link) == 1){
+                
+                address = gsub("%2C", ",", 
+                               gsub("%20", " ",
+                               gsub("https://www.google.com/maps/search/?api=1&query=", "",
+                                                address_link,
+                                                fixed = TRUE),
+                               fixed = TRUE),
+                               fixed = TRUE)
+                
+              } else{
+                
+                address <- NA
+                
+              }
+              
               club_page_data <- data.frame(
                 hs_name = hs_name,
-                text = text
+                text = text,
+                address = address
               ) |>
                 filter(text != "") |>
                 separate(text, sep = ":", into = c("desc", "value")) |>
