@@ -17,14 +17,14 @@ NOTE: Data was pulled internally from NFL database so no R file is included to p
 
 #### High School:
 
-* __final/hs_games_\[SEASON\].csv:__: Folder containing all data used for this project. Each of the 17 leagues has its own folder, containing 5 csv files of game level statistics for games played that year. 
+* __final/hs_games_SEASON.csv:__: Folder containing all data used for this project. Each of the 17 leagues has its own folder, containing 5 csv files of game level statistics for games played that year. 
 * __code/data/get_hs_data.R:__ Script to pull high school games data from [Max Preps](https://www.maxpreps.com/football/). Calls scripts from __code/data/high_school_helper__.
 * __code/data/test_various_game_cutoffs_HS.R:__ Script to test various cut-offs for minimum number of games/seasons for a high school team to be included in analysis.
 
 ### Model
 
 * __code/model/run_model.R__ Script to iteratively fit the three models for each state.
-* __code/model/stan/model_\[MODEL_NAME\].stan__: Stan code for respective model.
+* __code/model/stan/model_MODELNUM.stan__: Stan code for respective model.
 
 ### Results Analysis
 
