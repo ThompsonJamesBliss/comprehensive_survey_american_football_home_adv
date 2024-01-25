@@ -12,19 +12,19 @@ NOTE: Data was pulled internally from NFL database so no R file is included to p
 
 #### NCAA:
 
-* __data/final/NCAA_games.csv:__ Includes info on season, teams, travel distance and scores for each NCAA game from 2004-2023.
+* __data/final/NCAA_games.csv:__ Includes info on season, teams, travel distance and scores for each NCAA game from 2004-2023 seasons.
 * __code/data/get_NCAA_data.R:__ Script to pull NCAA games data from [MasseyRatings](https://masseyratings.com/cf/fbs).
 
 #### High School:
 
-* __final/hs_games_SEASON.csv:__: Folder containing all data used for this project. Each of the 17 leagues has its own folder, containing 5 csv files of game level statistics for games played that year. 
+* __final/hs_games_SEASON.csv:__: Folder containing all data used for this project. Each of the 17 leagues has its own folder, containing 5 csv files of game level statistics for games played that year. SEASON spans from 2004 to 2023.
 * __code/data/get_hs_data.R:__ Script to pull high school games data from [Max Preps](https://www.maxpreps.com/football/). Calls scripts from __code/data/high_school_helper__.
 * __code/data/test_various_game_cutoffs_HS.R:__ Script to test various cut-offs for minimum number of games/seasons for a high school team to be included in analysis.
 
 ### Model
 
 * __code/model/run_model.R__ Script to iteratively fit the three models for each state.
-* __code/model/stan/model_MODELNUM.stan__: Stan code for respective model.
+* __code/model/stan/model_MODELNUM.stan__: Stan code for respective model. MODELNUM spans from 1 to 3.
 
 ### Results Analysis
 
