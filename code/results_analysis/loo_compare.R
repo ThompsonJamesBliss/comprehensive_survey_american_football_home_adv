@@ -96,7 +96,7 @@ for(i in 1:nrow(df_loo)) {
     ### Constant HA
     alpha_2023 <- posterior$alpha
   
-  } else if(df_loo$elpd_diff_model_3[i] == 0) {  ### Model 2 (Linear Trend) Best
+  } else if(df_loo$elpd_diff_model_2[i] == 0) {  ### Model 2 (Linear Trend) Best
     file <- paste0('stan_results/model_2/', df_loo$league[i], ".rds")
     stan_object <- read_rds(file)
     posterior <- extract(stan_object)
@@ -106,7 +106,7 @@ for(i in 1:nrow(df_loo)) {
     t0 <- max(df_min_seasons |> filter(league == df_loo$league[i]) |> pull(min_season), 2004)
     alpha_2023 <- posterior$alpha_intercept + posterior$alpha_trend * (2023 - t0 + 1)
     
-  } else if(df_loo$elpd_diff_model_2[i] == 0) { ### Model 3 (Time Varying) Best 
+  } else if(df_loo$elpd_diff_model_3[i] == 0) { ### Model 3 (Time Varying) Best 
     file <- paste0('stan_results/model_3/',  df_loo$league[i], ".rds")
     stan_object <- read_rds(file)
     posterior <- extract(stan_object)
