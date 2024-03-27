@@ -32,14 +32,14 @@ parameters {
 model {
   vector[num_games] mu;
 
-  // priors
+  // priors (half normal on scale parameters)
   theta ~ normal(0, sigma_t);
-  sigma_t ~ inv_gamma(1,1);
+  sigma_t ~ normal(0, 5);
   alpha_intercept ~ normal(0, sigma_ai);
   alpha_trend ~ normal(0, sigma_at);
-  sigma_ai ~ inv_gamma(1,1);
-  sigma_at ~ inv_gamma(1,1);
-  sigma_m ~ inv_gamma(1,1);
+  sigma_ai ~ normal(0, 5);
+  sigma_at ~ normal(0, 5);
+  sigma_m ~ normal(0, 5);
 
 
   

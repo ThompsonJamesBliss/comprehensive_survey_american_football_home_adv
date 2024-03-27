@@ -148,3 +148,22 @@ get_loo_comparison <- function(league, model_names, parameter_set_name) {
   
   return(df_compare)
 }
+
+
+### Function to compute R-hat and ESS statistics 
+model_diagnostics <- function(model) {
+  
+  model_summary <- summary(model)
+  df_summary <- 
+    as.data.frame(model_summary[[1]]) %>% 
+    mutate('parameter' = as.factor(gsub("\\[.*]", "", rownames(.)))) %>% 
+    filter(grepl('alpha', parameter) | grepl('theta', parameter) | grepl('sigma', parameter)) %>% 
+    group_by(parameter) %>% 
+    summarise('rhat_pct' = mean(abs(Rhat - 1) < 0.1),
+              'max_rhat' = max(Rhat),
+              'min_rhat' = min(Rhat),
+              'mean_ess' = mean(n_eff)) 
+  
+  return(df_summary)
+}
+

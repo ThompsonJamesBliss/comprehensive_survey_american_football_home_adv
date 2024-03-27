@@ -8,14 +8,17 @@ params <- list(
   min_season = 2004,
   models = c("model_1", "model_2", "model_3"),
   seed = 73097,
-  chains = 3,
-  iter = 1000,
+  chains = 4,
+  iter = 2000,
   warmup = 500,
   adapt_delta = 0.95
 )
 
+### Set Parallelization
+options(mc.cores = params$chains)
 
 
+### Load Data
 df_HS <- data.frame(file_name = list.files("data/final/", pattern = "hs_games", full.names = T)) |>
   mutate(data = map(file_name, read_csv)) |>
   unnest() |>
@@ -52,6 +55,7 @@ df_model <- df_HS |>
   filter(!is.na(home_point_diff))
 
 
+### Loop over models to fit
 for (model_name in params$models) {
   ### Create Directory for LOO Objects if doesn't exist
   if (!dir.exists(paste0("stan_results/", model_name, "/loo_objects"))) {
@@ -146,10 +150,21 @@ for (model_name in params$models) {
       append = TRUE,
       col.names = !file.exists(paste0("stan_results/", model_name, "/model_DIC.csv"))
     )
+    
+    
+    ### Compute Model Diagnostics
+    df_diagnostics <- 
+      model_diagnostics(model) %>% 
+      mutate('model_name' = model_name,
+             'parameter_set_name' = parameter_set_name,
+             'league' = l) 
+    
+    write_csv(df_diagnostics, paste0("stan_results/", model_name, "/", parameter_set_name, "/diagnostics/", l, ".csv"))
 
 
     rm("model")
     rm("loo_object")
     rm("df_DIC_temp")
+    rm("df_diagnostics")
   }
 }
