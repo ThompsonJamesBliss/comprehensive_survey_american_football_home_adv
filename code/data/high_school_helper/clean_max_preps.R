@@ -34,7 +34,7 @@ df_club <- df_club |>
       df_club
     )
   )
-
+gg
 df_addresses_final <- read_csv("data/raw/high_school/long_lat_geo_code.csv") |>
   rename(lng = long)
 
