@@ -61,7 +61,7 @@ for (model_name in params$models) {
   if (!dir.exists(paste0("stan_results/", model_name, "/loo_objects"))) {
     dir.create(paste0("stan_results/", model_name, "/loo_objects"))
   }
-
+  
   for (l in unique(df_model$league)) {
     df_model_temp <- df_model |>
       filter(league == l, season >= params$min_season) |>
@@ -71,7 +71,7 @@ for (model_name in params$models) {
       spread(key = side, value = team) |>
       mutate(season = season - min(season) + 1) |>
       select(-c("game_id"))
-
+    
     ### List of Stan Params
     stan_data <- list(
       num_clubs = length(unique(c(
@@ -89,8 +89,8 @@ for (model_name in params$models) {
       h_adv = df_model_temp$home_game,
       school_matchup_type = df_model_temp$school_matchup_type
     )
-
-
+    
+    
     ### Fit Model
     model <- stan(
       file = paste0("code/model/stan/", model_name, ".stan"),
@@ -103,10 +103,10 @@ for (model_name in params$models) {
       pars = c("mu"),
       include = F
     )
-
+    
     write_rds(model, paste0("stan_results/", model_name, "/", l, ".rds"))
-
-
+    
+    
     ### Make Sure that categorical variables for this model are 1-indexed so we
     ### can compute the log-likelihood from the posterior means (i.e. if season 4 is the
     ### first season for given model, make sure we recode that to be season 1 so we know
@@ -115,7 +115,7 @@ for (model_name in params$models) {
     stan_data$home_team_code <- 1 + stan_data$home_team_code - min(c(stan_data$away_team_code, stan_data$home_team_code))
     stan_data$away_team_code <- 1 + stan_data$away_team_code - min(c(stan_data$away_team_code, stan_data$home_team_code))
     stan_data$school_matchup_type <- 1 + stan_data$school_matchup_type - min(stan_data$num_school_matchup_type)
-
+    
     ### Expand log-likelihood so we can compute LOO
     ### This re-derives pointwise log likelihood so that we don't have to
     ### store it in the model object itself, but that way we can get SE for our
@@ -124,7 +124,7 @@ for (model_name in params$models) {
     log_lik <- expand_log_lik(model, model_name, stan_data)
     loo_object <- loo(log_lik)
     write_rds(loo_object, paste0("stan_results/", model_name,  "/loo_objects/", l, ".rds"))
-
+    
     ### Compute DIC
     DIC <-
       compute_dic(
@@ -132,7 +132,7 @@ for (model_name in params$models) {
         likelihood = model_name,
         stan_data = stan_data
       )
-
+    
     ### Save Results
     df_DIC_temp <-
       tibble(
@@ -140,15 +140,15 @@ for (model_name in params$models) {
         "league" = l,
         "DIC" = DIC
       )
-
-
-
+    
+    
+    
     write.table(df_DIC_temp,
-      sep = ",",
-      row.names = FALSE,
-      paste0("stan_results/", model_name, "/model_DIC.csv"),
-      append = TRUE,
-      col.names = !file.exists(paste0("stan_results/", model_name, "/model_DIC.csv"))
+                sep = ",",
+                row.names = FALSE,
+                paste0("stan_results/", model_name, "/model_DIC.csv"),
+                append = TRUE,
+                col.names = !file.exists(paste0("stan_results/", model_name, "/model_DIC.csv"))
     )
     
     
@@ -156,12 +156,11 @@ for (model_name in params$models) {
     df_diagnostics <- 
       model_diagnostics(model) %>% 
       mutate('model_name' = model_name,
-             'parameter_set_name' = parameter_set_name,
              'league' = l) 
     
-    write_csv(df_diagnostics, paste0("stan_results/", model_name, "/", parameter_set_name, "/diagnostics/", l, ".csv"))
-
-
+    write_csv(df_diagnostics, paste0("stan_results/", model_name, "/diagnostics/", l, ".csv"))
+    
+    
     rm("model")
     rm("loo_object")
     rm("df_DIC_temp")
