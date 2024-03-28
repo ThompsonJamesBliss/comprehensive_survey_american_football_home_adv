@@ -57,11 +57,25 @@ df_model <- df_HS |>
 
 ### Loop over models to fit
 for (model_name in params$models) {
-  ### Create Directory for LOO Objects if doesn't exist
+  
+  ### Set up storage
+  if (!dir.exists("stan_results")) {
+    dir.create("stan_results")
+  }
+  
+  if (!dir.exists(paste0("stan_results/", model_name))) {
+    dir.create(paste0("stan_results/", model_name))
+  }
+  
   if (!dir.exists(paste0("stan_results/", model_name, "/loo_objects"))) {
     dir.create(paste0("stan_results/", model_name, "/loo_objects"))
   }
   
+  if (!dir.exists(paste0("stan_results/", model_name, "/diagnostics"))) {
+    dir.create(paste0("stan_results/", model_name, "/diagnostics"))
+  }
+  
+  ### Loop over leagues
   for (l in unique(df_model$league)) {
     df_model_temp <- df_model |>
       filter(league == l, season >= params$min_season) |>
