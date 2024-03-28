@@ -154,21 +154,17 @@ retry_this <- function(expr, error_return = NA,
 
 
 
-get_loo_comparison <- function(league, model_names, parameter_set_name) {
+get_loo_comparison <- function(league, model_names) {
   ### Read in Objects
   loo_objects <-
-    map(model_names, ~read_rds(paste0("stan_results/", .x, "/", parameter_set_name, "/loo_objects/", league, ".rds")))
-  # 
-  #   loo_objects <-
-  #     map(model_names, ~read_rds(paste0('~/Desktop/', .x, '/', league, ".rds")))
+    map(model_names, ~read_rds(paste0("stan_results/", .x, "/loo_objects/", league, ".rds")))
   
   ### Execute Comparison
   df_compare <- 
     loo_compare(loo_objects) %>% 
     as_tibble(rownames = 'model_name') %>% 
     mutate('league' = league,
-           'model_name' = gsub('model', 'model_', model_name),
-           'parameter_set_name' = parameter_set_name)
+           'model_name' = gsub('model', 'model_', model_name))
   
   return(df_compare)
 }

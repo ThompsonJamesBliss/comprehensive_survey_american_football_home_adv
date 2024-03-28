@@ -1,10 +1,9 @@
 library(rvest)
-library(zipcodeR)
 library(janitor)
 library(tidyverse)
 
 params <- list(
-  seasons = seq(2023, 2023),
+  seasons = seq(2004, 2023),
   seasons_to_remove = 2020,
   meters_to_miles = 0.00062137119
 )
@@ -164,17 +163,17 @@ df_scores_clean <- df_scores |>
   ) |>
   select(season, date, location, division, home_team, away_team, home_score, away_score, lng_home, lat_home, lng_away, lat_away) |>
   mutate_at(.vars = c("lng_home", "lng_away", "lat_home", "lat_away"), .funs = ~ as.numeric(.)) |>
-  rowwise() |>
   mutate(
     distance = ifelse(location == "Neutral",
       0,
-      params$meters_to_miles * geosphere::distVincentyEllipsoid(c(lng_home, lat_home), c(lng_away, lat_away))
+      params$meters_to_miles * geosphere::distVincentyEllipsoid(cbind(lng_home, lat_home), cbind(lng_away, lat_away))
     )
   ) |>
-  as.data.frame() |>
   mutate(
     day_of_week = weekdays(as.Date(date)),
-    satisfies_cutoff = !(season %in% params$seasons_to_remove)
+    satisfies_cutoff = !(season %in% params$seasons_to_remove) &
+      !is.na(home_team) & !is.na(away_team) &
+      !is.na(home_score) & !is.na(away_score)
   )
 
 

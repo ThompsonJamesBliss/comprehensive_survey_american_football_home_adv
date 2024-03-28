@@ -72,7 +72,9 @@ df_club_clean <- df_club |>
   distinct()
 
 df_games2 <- df_games |>
-  select(team1, team2, score1, score2, state, level, game_type, location, season, date, date_fill, team2_fill) |>
+  filter(level == "varsity") |>
+  select(-c("level")) |>
+  select(team1, team2, score1, score2, state, game_type, location, season, date, date_fill, team2_fill) |>
   distinct() |>
   filter(
     !is.na(score1),
@@ -184,14 +186,11 @@ df_games2 <- df_games |>
     location = ifelse(location == "Neutral",
       "Neutral",
       "Home"
-    ),
-    level = ifelse(is.na(level),
-                   "freshmen",
-                   level)
+    )
   ) |>
   filter(away_team != home_team) |>
-  select(season, date, location, level, game_type, home_team, away_team, home_score, away_score) |>
-  arrange(season, date, location, level, game_type) |>
+  select(season, date, location, game_type, home_team, away_team, home_score, away_score) |>
+  arrange(season, date, location, game_type) |>
   distinct()
 
 df_club_clean2 <- df_club_clean |>
@@ -224,18 +223,19 @@ df_games_clean <- df_games2 |>
                              "MD",
                              state_away),
          
-         in_state = state_home == state_away) |>
-  
-  rowwise() |>
-  mutate(
-    
-    
-    distance = ifelse(location == "Neutral",
+         in_state = state_home == state_away,
+         
+         distance = ifelse(location == "Neutral",
                       0,
-                      params$meters_to_miles * geosphere::distVincentyEllipsoid(c(lng_home, lat_home), c(lng_away, lat_away)))
-  ) |>
-  as.data.frame()
+                      params$meters_to_miles * geosphere::distVincentyEllipsoid(cbind(lng_home, lat_home),
+                                                                                cbind(lng_away, lat_away))
+    )
+  )
 
+
+df_games_clean <- df_games_clean |>
+  filter(level == "varsity" )|>
+  select(-c("level"))
 
 
 df_HS_temp <- df_games_clean  |>
@@ -283,13 +283,12 @@ df_games_clean2 <- df_games_clean|>
   select(season, date, location, game_type, home_team, away_team,
          home_score, away_score,
          state_home, state_away, lng_home, lat_home, lng_away, lat_away, distance,
-         level, satisfies_cutoff, in_state) 
+         satisfies_cutoff, in_state) 
 
 for(s in params$seasons){
   
   df_games_clean2 |>
     filter(season == s) |>
-    filter(level == "varsity") |>
     write.csv(paste0("data/final/hs_games_", s, ".csv"), row.names = F)
   
 }

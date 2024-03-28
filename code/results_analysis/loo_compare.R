@@ -2,12 +2,15 @@ library(tidyverse)
 library(loo)
 library(gt)
 library(rstan)
+library(ggridges)
+
 options(mc.cores = parallel::detectCores() - 1)
 
 source("code/utils.R")
 
 params <- list(
   min_season = 2004,
+  max_season = 2023,
   models = c("model_1", "model_2", "model_3"),
   lower_bound = 0.025,
   upper_bound = 0.975
@@ -26,15 +29,18 @@ df_NCAA <- read_csv("data/final/NCAA_games.csv") |>
   select(-c("date"))
 
 df_model <- df_HS |>
+  mutate(level = "High School") |>
   filter(in_state) |>
   rename(league = state_home) |>
   bind_rows(
     df_NFL |>
-      mutate(league = "NFL")
+      mutate(league = "NFL",
+             level = "NFL")
   ) |>
   bind_rows(
     df_NCAA |>
-      rename(league = division)
+      rename(league = division) |>
+      mutate(level = "NCAA")
   ) |>
   filter(satisfies_cutoff) |>
   mutate(
@@ -42,7 +48,7 @@ df_model <- df_HS |>
     home_game = as.integer(location == "Home")
   ) |>
   select(
-    league, season,
+    league, season, level,
     home_team, away_team, home_game,
     home_point_diff
   ) |>
@@ -51,10 +57,10 @@ df_model <- df_HS |>
 
 
 ### Do the LOO Comparison for All Models
-leagues <- gsub(".rds", "", list.files(paste0("stan_results/", unique(df_model$league), "/"),pattern = ".rds"))
+leagues <- unique(df_model$league)
 
-df_loo <- 
-  map_dfr(leagues, ~get_loo_comparison(league = .x, model_names, parameter_set_name))
+df_loo <- map_dfr(leagues,
+                  ~get_loo_comparison(league = .x, model_names = params$models))
 
 ### Visualize Results
 df_loo <-
@@ -80,7 +86,7 @@ df_min_seasons <- df_model |>
     min_season = min(season)
   )
 
-
+df_plot <- data.frame()
 
 ### Add in 2023 HA estimate
 ### Note here Model 3 in our code is linear and model 2 is TV even though 
@@ -94,8 +100,15 @@ for(i in 1:nrow(df_loo)) {
     posterior <- extract(stan_object)
     
     ### Constant HA
-    alpha_2023 <- posterior$alpha
-  
+    alpha_current <- posterior$alpha
+    
+    df_plot <- bind_rows(df_plot,
+                         data.frame(
+                           league = df_loo$league[i],
+                           model = "Model 1",
+                           alpha = alpha_current
+                         ))
+    
   } else if(df_loo$elpd_diff_model_2[i] == 0) {  ### Model 2 (Linear Trend) Best
     file <- paste0('stan_results/model_2/', df_loo$league[i], ".rds")
     stan_object <- read_rds(file)
@@ -103,8 +116,16 @@ for(i in 1:nrow(df_loo)) {
     
     ### When we fit the model, the min-season (t0) is season 1 so the current 
     ### season shoudl be t_current - t0 + 1
-    t0 <- max(df_min_seasons |> filter(league == df_loo$league[i]) |> pull(min_season), 2004)
-    alpha_2023 <- posterior$alpha_intercept + posterior$alpha_trend * (2023 - t0 + 1)
+    t0 <- max(df_min_seasons |> filter(league == df_loo$league[i]) |> pull(min_season), params$min_season)
+    alpha_current <- posterior$alpha_intercept + posterior$alpha_trend * (params$max_season - t0 + 1)
+    
+    df_plot <- bind_rows(df_plot,
+                         data.frame(
+                           league = df_loo$league[i],
+                           model = "Model 2",
+                           alpha = alpha_current
+                         ))
+    
     
   } else if(df_loo$elpd_diff_model_3[i] == 0) { ### Model 3 (Time Varying) Best 
     file <- paste0('stan_results/model_3/',  df_loo$league[i], ".rds")
@@ -112,15 +133,62 @@ for(i in 1:nrow(df_loo)) {
     posterior <- extract(stan_object)
     
     ### Most recent HA in TV model
-    alpha_2023 <- posterior$alpha[,ncol(posterior$alpha)]
+    alpha_current <- posterior$alpha[,ncol(posterior$alpha)]
+    
+    df_plot <- bind_rows(df_plot,
+                         data.frame(
+                           league = df_loo$league[i],
+                           model = "Model 3",
+                           alpha = alpha_current
+                         ))
     
   }
   
+  
+  
   ### Posterior Mean and Quantiles
-  df_loo$ha_2023[i] <- mean(alpha_2023)
-  df_loo$ha_2023_lower[i] <- quantile(alpha_2023, params$lower_bound)
-  df_loo$ha_2023_upper[i] <- quantile(alpha_2023, params$upper_bound)
+  df_loo$ha_2023[i] <- mean(alpha_current)
+  df_loo$ha_2023_lower[i] <- quantile(alpha_current, params$lower_bound)
+  df_loo$ha_2023_upper[i] <- quantile(alpha_current, params$upper_bound)
   
 }
 
-write_csv(df_loo, 'analysis_code/analysis/loo_results.csv')
+write_csv(df_loo, 'results/loo_results.csv')
+
+
+
+
+
+ggplot(df_plot |>
+         group_by(league) |>
+         mutate(alpha_current = median(alpha)) |>
+         ungroup() |>
+         mutate(league_f = fct_reorder(league, alpha_current, .desc = T)) |>
+         inner_join(df_model |>
+                      select(league, level) |>
+                      distinct(),
+                    by = "league"),
+       aes(x = alpha, y = league_f)) + 
+  geom_vline(lty = 2, xintercept = 0) +
+  geom_density_ridges(aes(fill = level), 
+                      alpha = 0.5, 
+                      quantiles = 0.5, 
+                      quantile_lines = T, 
+                      rel_min_height = 0.01) + 
+  scale_x_continuous() +
+  labs(x = 'Home Advantage (Points)',
+       y = 'League',
+       fill = '',
+       title = 'Posterior Distributions for 2023 Home Advantage') +
+  theme_bw() +
+  theme(text = element_text(size = 18),
+        legend.position = "bottom")
+
+ggsave(paste0('results/ridge_plots_2023.jpg'),
+       height = 16,
+       width = 8)
+
+
+
+
+

@@ -19,15 +19,15 @@ for (s in params$seasons) {
     bind_rows(df_club)
 }
 
-df_club <- df_club |>
-  sample_n(10)
-
 df_addresses <- df_club |>
   filter(!is.na(address), !is.na(hs_name)) |>
   select(team_id, address, hs_name) |>
   mutate(address = paste0(hs_name, ", ", address)) |>
   select(team_id, address) |>
   distinct() |>
+  mutate(
+    address = iconv(address)
+  ) |>
   geocode(
     address = address,
     method = "arcgis",
@@ -40,6 +40,9 @@ df_addresses2 <- df_club |>
   tidyr::separate(team_id, into = c("DROP", "state", "city"), remove = FALSE, sep = "/") |>
   mutate(address = paste0(hs_name, ", ", gsub("-", " ", tools::toTitleCase(city)), ", ", toupper(state))) |>
   distinct() |>
+  mutate(
+    address = iconv(address)
+  ) |>
   geocode(
     address = address,
     method = "arcgis",
@@ -52,6 +55,9 @@ df_addresses3 <- df_club |>
            !is.na(as.integer(substr(address, 1,1)))) |>
   select(team_id, address) |>
   distinct() |>
+  mutate(
+    address = iconv(address)
+  ) |>
   geocode(
     address = address,
     method = "arcgis",
@@ -69,6 +75,9 @@ df_addresses4 <- df_club |>
   mutate(address = paste0(hs_name, ", ", address)) |>
   select(team_id, address) |>
   distinct() |>
+  mutate(
+    address = iconv(address)
+  ) |>
   geocode(
     address = address,
     method = "arcgis",
@@ -83,6 +92,9 @@ df_addresses5 <- df_club |>
   mutate(address = paste0(hs_name, ", ", address)) |>
   select(team_id, address) |>
   distinct() |>
+  mutate(
+    address = iconv(address)
+  ) |>
   geocode(
     address = address,
     method = "arcgis",
@@ -93,6 +105,9 @@ df_addresses6 <- df_club |>
   tidyr::separate(team_id, into = c("DROP", "state", "city"), remove = FALSE, sep = "/") |>
   mutate(address = paste0(gsub("-", " ", tools::toTitleCase(city)), ", ", toupper(state))) |>
   distinct() |>
+  mutate(
+    address = iconv(address)
+  ) |>
   geocode(
     address = address,
     method = "arcgis",

@@ -1,9 +1,4 @@
 library(broom)
-library(rgeos)
-library(geojsonio)
-library(RColorBrewer)
-library(rgdal)
-library(viridis)
 library(ggridges)
 library(tidyverse)
 library(rstan)
@@ -233,7 +228,7 @@ p1 <- ggplot() +
   alpha = 0.8,
   shape = 17) +
   
-  facet_wrap(~league, ncol = 4, nrow = 4) +
+  facet_wrap(~league, ncol = 4, nrow = 5) +
   theme_bw() +
   scale_color_brewer(palette = "Set1",
                      breaks = c("Constant HA (Model 1)",
@@ -248,8 +243,8 @@ p1 <- ggplot() +
   xlab("Season") +
   ylab("Home Advantage (Points)") +
   labs(color = "") +
-  scale_y_continuous(breaks = seq(0,6, 3)) +
-  coord_cartesian(ylim = c(-1, 6)) +
+  scale_y_continuous() +
+  #coord_cartesian(ylim = c(-1, 8)) +
   scale_x_continuous(breaks = c(2004, 2013, 2022),
                      labels = c("'04",
                                 "'13",
@@ -260,7 +255,8 @@ p1 <- ggplot() +
   guides(color = guide_legend(nrow = 2))
 
 
-ggsave("results/all_models_filtered.png", p1, width = 12, height = 12)
+
+ggsave("results/all_models_filtered.jpg", p1, width = 12, height = 12)
 
 
 
@@ -305,7 +301,7 @@ p2 <- df_alpha_vals_cat |>
   ggtitle("Home Advantage vs Distance Travelled")
 
 
-ggsave("visualization/results/distance_alpha_z.png", p2, width = 6, height = 4)
+ggsave("visualization/results/distance_alpha_z.jpg", p2, width = 6, height = 4)
 
 
 ggplot(df_alpha_vals_trend |>
@@ -326,9 +322,11 @@ ggplot(df_alpha_vals_trend |>
        y = 'League',
        fill = '',
        title = 'Posterior Distributions for HA Linear Trend') +
-  theme(text = element_text(size = 18))
+  theme_bw() +
+  theme(text = element_text(size = 18),
+        legend.position = "bottom")
 
-ggsave(paste0('visualization/results/ridge_plots.png'),
+ggsave(paste0('visualization/results/ridge_plots.jpg'),
        height = 16,
        width = 8)
 
@@ -340,13 +338,18 @@ ggsave(paste0('visualization/results/ridge_plots.png'),
 
 post_intervals <- df_alpha_vals_trend |> 
   group_by(league) |> 
-  summarise('lower' = quantile(alpha_trend, 0.025),
-            'upper' = quantile(alpha_trend, 0.975),
-            'median' =  quantile(alpha_trend, 0.5),
-            'mean' = mean(alpha_trend)) |> 
+  summarise(lower = quantile(alpha_trend, 0.025),
+            upper = quantile(alpha_trend, 0.975),
+            median =  quantile(alpha_trend, 0.5),
+            mean = mean(alpha_trend),
+            percent_more_than_0 = mean(alpha_trend < 0)) |> 
+  ungroup() |>
   mutate('contains_0' = map2_lgl(lower, upper, ~between(0, .x, .y)))
 
 post_intervals |>
   write.csv("results/post_intervals.csv", row.names = FALSE)
 
+
+
+# MAKE PLOT WITH BEST HA BY
 

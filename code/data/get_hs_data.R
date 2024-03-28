@@ -12,7 +12,8 @@ params <- list(
   instateonly = T,
   seasons_to_remove = 2020,
   state_season_combos_to_remove = c("OR_2006", "OR_2005", "OR_2004",
-                                    "MD_2006", "MD_2005", "MD_2004"),
+                                    "MD_2006", "MD_2005", "MD_2004",
+                                    "MD_2007"),
   rescrape_data = FALSE,
   repull_long_lat = FALSE,
   meters_to_miles = 0.00062137119
