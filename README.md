@@ -33,7 +33,7 @@ NOTE: Data was pulled internally from NFL database so no R file is included to p
 * __code/results_analysis/visualize_results.R__: Script to visualize model results.
 * __code/results_analysis/team_strength_check.R__: Script to compare team strength results from MasseyRatings to our ratings.
 * __code/results_analysis/model_diagnostics.R__: Script to check model diagnostics.
-* __code/results_analysis/compare_models_2.R__: Script to compare standard and hierarhical versions of Model 2
+* __code/results_analysis/compare_models_2.R__: Script to compare standard and hierarchical versions of Model 2
 
 
 ---
