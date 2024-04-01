@@ -9,15 +9,24 @@ params <- list(
   models = 'model_2_hierarchical',
   seed = 73097,
   chains = 4,
-  iter = 5000,
-  warmup = 1000,
-  adapt_delta = 0.95
+  iter = 2000,
+  warmup = 500,
+  adapt_delta = 0.8
 )
 
 model_name <- params$models
 
 ### Set Parallelization
-options(mc.cores = params$chains)
+options(mc.cores = parallel::detectCores())
+
+### Create Storage
+if (!dir.exists("stan_results")) {
+  dir.create("stan_results")
+}
+
+if (!dir.exists(paste0("stan_results/", model_name))) {
+  dir.create(paste0("stan_results/", model_name))
+}
 
 
 ### Load Data
@@ -43,15 +52,11 @@ df_model <- df_HS |>
   ) |>
   filter(!is.na(home_point_diff))
 
-
-### Create Directory for LOO Objects if doesn't exist
-if (!dir.exists(paste0("stan_results/", model_name, "/loo_objects"))) {
-  dir.create(paste0("stan_results/", model_name, "/loo_objects"))
-}
-
+### Prepare data for stan
 df_model_temp <- 
   df_model %>% 
   filter(season >= params$min_season) %>% 
+  filter(league %in% c('AK', 'VT')) %>% 
   arrange(league) %>% 
   mutate('league_id' = as.integer(factor(league)),
          'game_id' = row_number()) %>% 
@@ -71,6 +76,13 @@ num_clubs_league <-
   summarise('n_teams' = n_distinct(c(home_team, away_team))) %>% 
   pull(n_teams)
 
+team_leagues <- 
+  bind_rows(
+    df_model_temp %>% select('team_id' = home_team, league_id), 
+    df_model_temp %>% select('team_id' = away_team, league_id) 
+  ) %>% 
+  distinct() %>% 
+  arrange(team_id) 
 
 ### List of Stan Params
 stan_data <- list(
@@ -83,6 +95,7 @@ stan_data <- list(
   'away_team_code' = df_model_temp$away_team,
   'season' = df_model_temp$season,
   'league' = df_model_temp$league_id,
+  'team_league' = team_leagues$league_id,
   'h_point_diff' = df_model_temp$home_point_diff,
   'h_adv' = df_model_temp$home_game
 )
@@ -95,13 +108,15 @@ model <- stan(
   seed = params$seed,
   chains = params$chains,
   iter = params$iter,
+  refresh = params$iter/100,
   warmup = params$warmup,
-  control = list(adapt_delta = params$adapt_delta),
+  control = list(adapt_delta = params$adapt_delta,
+                 max_treedepth = 8),
   pars = c("mu"),
   include = F
 )
 
-write_rds(model, paste0("stan_results/", model_name, "/", l, ".rds"))
+write_rds(model, paste0("stan_results/", model_name, ".rds"))
 
 
 ### Make Sure that categorical variables for this model are 1-indexed so we
@@ -120,40 +135,11 @@ stan_data$school_matchup_type <- 1 + stan_data$school_matchup_type - min(stan_da
 ### Computing LOO takes a few seconds
 log_lik <- expand_log_lik(model, model_name, stan_data)
 loo_object <- loo(log_lik)
-write_rds(loo_object, paste0("stan_results/", model_name,  "/loo_objects/", l, ".rds"))
-
-### Compute DIC
-DIC <-
-  compute_dic(
-    model = model,
-    likelihood = model_name,
-    stan_data = stan_data
-  )
-
-### Save Results
-df_DIC_temp <-
-  tibble(
-    "model_name" = model_name,
-    "league" = l,
-    "DIC" = DIC
-  )
-
-
-
-write.table(df_DIC_temp,
-            sep = ",",
-            row.names = FALSE,
-            paste0("stan_results/", model_name, "/model_DIC.csv"),
-            append = TRUE,
-            col.names = !file.exists(paste0("stan_results/", model_name, "/model_DIC.csv"))
-)
-
+write_rds(loo_object, paste0("stan_results/", model_name,  "/loo_object.rds"))
 
 ### Compute Model Diagnostics
 df_diagnostics <- 
   model_diagnostics(model) %>% 
-  mutate('model_name' = model_name,
-         'parameter_set_name' = parameter_set_name,
-         'league' = l) 
+  mutate('model_name' = model_name) 
 
-write_csv(df_diagnostics, paste0("stan_results/", model_name, "/", parameter_set_name, "/diagnostics/", l, ".csv"))
+write_csv(df_diagnostics, paste0("stan_results/", model_name, '/diagnostics.csv'))

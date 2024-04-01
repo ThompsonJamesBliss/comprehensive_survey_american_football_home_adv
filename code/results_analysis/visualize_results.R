@@ -54,7 +54,7 @@ df_leagues <- bind_rows(df_HS |>
                         
                         df_NCAA |>
                           rename(league = division) |>
-                          mutate(level = "College") |>
+                          mutate(level = "NCAA") |>
                           select(league, level) |>
                           distinct(),
                         
@@ -324,6 +324,7 @@ ggplot(df_alpha_vals_trend |>
        title = 'Posterior Distributions for HA Linear Trend') +
   theme_bw() +
   theme(text = element_text(size = 18),
+        plot.title = elemtn_text(hjust = 0.5),
         legend.position = "bottom")
 
 ggsave(paste0('visualization/results/ridge_plots.jpg'),

@@ -181,7 +181,9 @@ ggplot(df_plot |>
        fill = '',
        title = 'Posterior Distributions for 2023 Home Advantage') +
   theme_bw() +
-  theme(text = element_text(size = 18),
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        text = element_text(size = 18),
         legend.position = "bottom")
 
 ggsave(paste0('results/ridge_plots_2023.jpg'),

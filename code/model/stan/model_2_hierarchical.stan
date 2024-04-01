@@ -10,6 +10,7 @@ data {
   
   int<lower=1> num_leagues;                                   // number of leagues
   int<lower=1,upper=num_leagues> league[num_games];       // vector of league ids;
+  int<lower=1,upper=num_leagues> team_league[num_clubs];       // vector of league ids;
   int<lower=1,upper=num_clubs> num_clubs_league[num_leagues];                       // number of clubs (w/in league)
   
   real h_point_diff[num_games];                       // home point differential for game g
@@ -32,14 +33,11 @@ parameters {
   
 }
 model {
-  int pos_clubs;
   vector[num_games] mu;
 
   // priors
-  pos_clubs = 1;
-  for(l in 1:num_leagues) {
-    segment(theta, pos_clubs, num_clubs_league[l]) ~ normal(0, sigma_t[l]);
-    pos_clubs += num_clubs_league[l];
+  for(c in 1:num_clubs) {
+    theta[c] ~ normal(0, sigma_t[team_league[c]]);
   }
     
   // half normal priors since we declared lower bounds of 0 on all the scale parameters  
@@ -54,22 +52,10 @@ model {
   // likelihood
   for(g in 1:num_games) {
     mu[g] = theta[home_team_code[g]] - theta[away_team_code[g]] + (alpha_trend[league[g]]  * season[g] + alpha_intercept[league[g]]) * h_adv[g];
-    h_point_diff[g] ~ normal(mu[g], sigma_m[league[g]]);
+    // h_point_diff[g] ~ normal(mu[g], sigma_m[league[g]]);
   }
   
-  // h_point_diff ~ normal(mu, sigma_m[league]); 
+  h_point_diff ~ normal(mu, sigma_m[league]);
   
   
-}
-generated quantities{
-  vector[num_games] mu;
-  
-  real log_lik = 0;
-  
-  for(g in 1:num_games) {
-    mu[g] = theta[home_team_code[g]] - theta[away_team_code[g]] + (alpha_trend[league[g]]  * season[g] + alpha_intercept[league[g]]) * h_adv[g];
-    
-    // Update total log likelihood
-    log_lik += normal_lpdf(h_point_diff[g] | mu[g], sigma_m[league[g]]);
-  }
 }
