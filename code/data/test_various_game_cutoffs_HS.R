@@ -4,8 +4,8 @@ library(viridis)
 params <- list(final_choice_plot_minseason = 1,
   final_choice_plot_mingames = 7)
 
-test_parameters = expand.grid(minseason = seq(1, 25),
-                              mingames = seq(1, 16))
+test_parameters = expand.grid(minseason = seq(1, 20),
+                              mingames = seq(1, 11))
 
 data <- data.frame(file_name = list.files("data/final/", pattern = "hs_games", full.names = T)) |>
   mutate(data = map(file_name, read_csv)) |>
@@ -17,6 +17,8 @@ data <- data.frame(file_name = list.files("data/final/", pattern = "hs_games", f
 df_results <- data.frame()
 
 for(i in seq(1, nrow(test_parameters))){
+  
+  print(i)
 
   row <- test_parameters[i,]
   
@@ -30,7 +32,7 @@ for(i in seq(1, nrow(test_parameters))){
     row_count_prev = row_count
     
     data_by_team_temp <- data_temp %>%
-      #filter(!row$instateonly | in_state) %>%
+      filter(in_state) %>%
       gather(key = "side", value = "team", home_team, away_team) %>%
       select(-c("side")) %>%
       group_by(team, season) %>%
