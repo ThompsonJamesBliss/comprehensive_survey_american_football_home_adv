@@ -186,7 +186,7 @@ ggplot(df_plot |>
         text = element_text(size = 18),
         legend.position = "bottom")
 
-ggsave(paste0('results/ridge_plots_2023.jpg'),
+ggsave(paste0('visualization/results/ridge_plots_2023.jpg'),
        height = 16,
        width = 8)
 

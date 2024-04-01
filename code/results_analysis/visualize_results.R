@@ -256,7 +256,7 @@ p1 <- ggplot() +
 
 
 
-ggsave("results/all_models_filtered.jpg", p1, width = 12, height = 12)
+ggsave("visualization/results/all_models_filtered.jpg", p1, width = 12, height = 12)
 
 
 
