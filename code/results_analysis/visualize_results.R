@@ -275,7 +275,7 @@ df_distances <- df_HS   |>
 
 p2 <- df_alpha_vals_cat |>
   group_by(league, season) |>
-  summarise(alpha = median(alpha)) |>
+  summarise(alpha = mean(alpha)) |>
   ungroup() |>
   group_by(league) |>
   mutate(alpha = scale(alpha)[,1]) |>

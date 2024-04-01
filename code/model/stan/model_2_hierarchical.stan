@@ -46,6 +46,7 @@ model {
   sigma_m ~ normal(0,5); 
   sigma_at ~ normal(0,5); 
   
+  grand_trend ~ normal(0, 5);
   alpha_intercept ~ normal(0, sigma_ai);
   alpha_trend ~ normal(grand_trend, sigma_at);
 

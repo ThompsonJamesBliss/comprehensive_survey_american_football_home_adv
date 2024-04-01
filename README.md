@@ -25,11 +25,15 @@ NOTE: Data was pulled internally from NFL database so no R file is included to p
 
 * __code/model/run_model.R__ Script to iteratively fit the three models for each state.
 * __code/model/stan/model_MODELNUM.stan__: Stan code for respective model. MODELNUM spans from 1 to 3.
+* __code/model/stan/model_2_hierarchical.stan__: Stan code for hierarchical version of model_2.
 
 ### Results Analysis
 
 * __code/results_analysis/loo_compare.R__ Script to compute expected log pointwise predictive density (ELPD) estimated via the leave-one-out cross-validation.
-* __code/results_analysis/visualize_results.R__: Script to create visualize model results.
+* __code/results_analysis/visualize_results.R__: Script to visualize model results.
+* __code/results_analysis/team_strength_check.R__: Script to compare team strength results from MasseyRatings to our ratings.
+* __code/results_analysis/model_diagnostics.R__: Script to check model diagnostics.
+* __code/results_analysis/compare_models_2.R__: Script to compare standard and hierarhical versions of Model 2
 
 
 ---

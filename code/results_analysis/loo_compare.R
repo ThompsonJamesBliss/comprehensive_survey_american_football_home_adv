@@ -191,6 +191,18 @@ ggsave(paste0('results/ridge_plots_2023.jpg'),
        width = 8)
 
 
+### Latex Table
+df_loo <- read_csv('results/loo_results.csv')
+
+df_loo %>% 
+  mutate('ha_23' = paste0(sprintf('%0.2f', ha_2023), ' (', sprintf('%0.2f', ha_2023_lower), ', ', sprintf('%0.2f', ha_2023_upper), ')')) %>% 
+  arrange(desc(league_group)) %>% 
+  select(league, ends_with('_1'), ends_with('_2'), ends_with('_3'), ha_23) %>% 
+  xtable::xtable(align = 'cccccccccccc') %>% 
+  print(include.rownames = F) %>% 
+  gsub('0.00', '\\\\textit{0.00}', .) %>% 
+  cat()
+
 
 
 
