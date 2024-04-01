@@ -83,6 +83,10 @@ expand_log_lik <- function(model, likelihood, stan_data) {
   ### Extract Posterior Samples
   posterior <- extract(model)
   n_iter <- length(posterior$log_lik)
+  if(n_iter == 0) {
+    n_iter <- length(posterior$lp__)
+  }
+    
   n_games <- stan_data$num_games
   
   ### (2) Compute log-liklihood at each iteration
