@@ -70,3 +70,23 @@ df_3 %>%
   print(include.rownames = F) 
 
 
+diagnostics_H <- read_csv('stan_results/model_2_hierarchical/diagnostics.csv')
+diagnostics_HS <- read_csv('stan_results/model_2_hierarchical_small/diagnostics.csv')
+
+bind_rows(
+  diagnostics_H %>% mutate('model' = 'All 50 States'),
+  diagnostics_HS %>% mutate('model' = 'States < 10,000 Games')
+) %>% 
+  select(-rhat_pct) %>% 
+  group_by(model) %>% 
+  mutate('max_rhat' = max(max_rhat),
+         'min_rhat' = min(min_rhat)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = 'parameter', 
+              values_from = 'mean_ess') %>% 
+  select(model, min_rhat, max_rhat, everything()) %>% 
+  xtable::xtable(align = rep('c', ncol(.) + 1), 
+                 digits = c(0, 0, 2, 2, rep(0, ncol(.) - 3))) %>% 
+  print(include.rownames = F) 
+
+
