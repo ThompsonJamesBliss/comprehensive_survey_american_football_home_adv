@@ -183,12 +183,12 @@ ggplot(df_plot |>
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5),
-        text = element_text(size = 18),
+        text = element_text(size = 24),
         legend.position = "bottom")
 
 ggsave(paste0('visualization/results/ridge_plots_2023.jpg'),
        height = 16,
-       width = 8)
+       width = 12)
 
 
 ### Latex Table

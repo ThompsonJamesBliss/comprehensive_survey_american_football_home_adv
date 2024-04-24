@@ -323,13 +323,13 @@ ggplot(df_alpha_vals_trend |>
        fill = '',
        title = 'Posterior Distributions for HA Linear Trend') +
   theme_bw() +
-  theme(text = element_text(size = 18),
+  theme(text = element_text(size = 24),
         plot.title = elemtn_text(hjust = 0.5),
         legend.position = "bottom")
 
 ggsave(paste0('visualization/results/ridge_plots.jpg'),
        height = 16,
-       width = 8)
+       width = 10)
 
 
 
