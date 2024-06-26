@@ -297,7 +297,7 @@ p2 <- df_alpha_vals_cat |>
   scale_color_brewer(palette = "Set2") +
   theme(legend.position = "bottom") +
   
-  labs(color = "", subtitle = bquote(League-Season~Estimates~(hat(α)[kt]))) +
+  labs(color = "", subtitle = bquote(League-Season~Estimates~(hat(beta)[kt]))) +
   ggtitle("Home Advantage vs Distance Travelled")
 
 
