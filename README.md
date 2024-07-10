@@ -1,5 +1,5 @@
 # A Comprehensive Survey of the Home Advantage in American football
-This repository contains the data and code used in a manuscript [_A Comprehensive Survey of the Home Advantage in American football_](https://arxiv.org/abs/2401.16392) by Luke Benz, Thompson Bliss and Michael Lopez.
+This repository contains the data and code used in a manuscript "A Comprehensive Survey of the Home Advantage in American football" by Luke Benz, Thompson Bliss and Michael Lopez. ([Link](https://www.degruyter.com/document/doi/10.1515/jqas-2024-0016/html), [Pre-print](https://arxiv.org/abs/2401.16392))
 
 ### Data
 
