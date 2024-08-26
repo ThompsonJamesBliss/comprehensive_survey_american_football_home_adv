@@ -1,28 +1,28 @@
 # for each season
 for (season in params$seasons) {
   season <- substr(season, 3, 4)
-
+  
   df_club <- data.frame()
-
-
+  
+  
   # iterating through states
   for (state in params$states) {
     # games
     df_games <- data.frame()
-
-
+    
+    
     print(paste0("Season: 20", season, "; State: ", state))
-
+    
     i <- 1
-
+    
     urls_hs <- c()
-
+    
     page_data <- -1
-
+    
     # while there still is data
     while ((length(urls_hs) > 0 | i == 1) & !is.na(page_data)) {
       print(i)
-
+      
       page_data <- retry_this(
         read_html(paste0(
           "https://www.maxpreps.com/",
@@ -31,8 +31,8 @@ for (season in params$seasons) {
           season,
           "-",
           ifelse(as.integer(season) + 1 < 10,
-            paste0("0", as.integer(season) + 1),
-            as.integer(season) + 1
+                 paste0("0", as.integer(season) + 1),
+                 as.integer(season) + 1
           ),
           "/rankings/",
           i
@@ -41,95 +41,95 @@ for (season in params$seasons) {
         sleep_time = 5,
         silent = TRUE
       )
-
-
+      
+      
       i <- i + 1
-
-
+      
+      
       if (!is.na(page_data)) {
         # grabbing URLs to HS
         urls_hs <- page_data |>
           html_nodes("table") |>
           html_nodes("a") |>
           html_attr("href")
-
+        
         # selecting URLS for HS only
         urls_hs <- urls_hs[grepl("football", urls_hs)]
-
+        
         if (length(urls_hs) > 0) {
           # iterating through HS
           for (u in urls_hs) {
             # Max Preps Team Id
             team_id <- gsub("football/", "", u)
-
+            
             team_id <- gsub(
               paste0(
                 season,
                 "-",
                 ifelse(as.integer(season) + 1 < 10,
-                  paste0("0", as.integer(season) + 1),
-                  as.integer(season) + 1
+                       paste0("0", as.integer(season) + 1),
+                       as.integer(season) + 1
                 ),
                 "/schedule/"
               ),
               "",
               team_id
             )
-
+            
             df_club_temp <- data.frame(
               team_id = team_id,
               state = state
             )
-
+            
             club_page <- retry_this(read_html(paste0("https://www.maxpreps.com", team_id)),
-              max_tries = 20,
-              sleep_time = 3,
-              silent = TRUE
+                                    max_tries = 20,
+                                    sleep_time = 3,
+                                    silent = TRUE
             )
-
-
+            
+            
             club_page_data <- data.frame()
-
+            
             if (!is.na(club_page)) {
               hs_name <- club_page |>
                 html_nodes("h1") |>
                 html_text() |>
                 str_trim()
-
+              
               text <- club_page |>
                 html_nodes("dl") |>
                 html_text() |>
                 as.character()
-
+              
               if (length(text) > 0) {
                 text <- gsub("Mascot", ";mascot:", text)
-
+                
                 text <- gsub("Colors", ";colors:", text)
-
+                
                 text <- gsub("School Type", ";school_type:", text)
-
+                
                 text <- gsub("Athletic Director", ";athletic_director:", text)
-
+                
                 text <- str_split(string = text, pattern = ";")[[1]]
               } else {
                 text <- ""
               }
-
-
+              
+              
               club_page_links <- club_page |>
                 html_nodes("a") |>
                 html_attr("href")
               
               address_link <- unique(club_page_links[grepl("google.com/maps", club_page_links)])
-
+              
               if(length(address_link) == 1){
                 
                 address = gsub("%2C", ",", 
                                gsub("%20", " ",
-                               gsub("https://www.google.com/maps/search/?api=1&query=", "",
-                                                address_link,
-                                                fixed = TRUE),
-                               fixed = TRUE),
+                                    gsub("https://www.google.com/maps/search/?api=1&query=", "",
+                                         address_link,
+                                         fixed = TRUE),
+                                    fixed = TRUE),
                                fixed = TRUE)
                 
               } else{
@@ -150,16 +150,16 @@ for (season in params$seasons) {
                 ungroup() |>
                 spread(key = desc, value = value)
             }
-
-
+            
+            
             df_club_temp <- df_club_temp |>
               bind_cols(club_page_data)
-
+            
             df_club <- bind_rows(
               df_club,
               df_club_temp
             )
-
+            
             schedule_page <- retry_this(
               read_html(paste0(
                 "https://www.maxpreps.com",
@@ -168,8 +168,8 @@ for (season in params$seasons) {
                 season,
                 "-",
                 ifelse(as.integer(season) + 1 < 10,
-                  paste0("0", as.integer(season) + 1),
-                  as.integer(season) + 1
+                       paste0("0", as.integer(season) + 1),
+                       as.integer(season) + 1
                 ),
                 "/schedule"
               )),
@@ -177,7 +177,7 @@ for (season in params$seasons) {
               max_tries = 3,
               silent = TRUE
             )
-
+            
             try(
               if (!is.na(schedule_page)) {
                 # getting Games info
@@ -186,14 +186,14 @@ for (season in params$seasons) {
                   html_nodes("tr") |>
                   html_nodes("a") |>
                   html_attr("href") # as above
-
+                
                 schedule_page_links_first <- schedule_page |>
                   html_nodes("table") |>
                   html_nodes("tr") |>
                   html_node("a") |>
                   html_attr("href") # just the first url in each tr
-
-
+                
+                
                 if (length(schedule_page_links) > 0) {
                   df_schedule_page_links <- data.frame(
                     url = schedule_page_links, # full list
@@ -206,43 +206,43 @@ for (season in params$seasons) {
                       grepl("/games/", url) ~ "game_url"
                     )) |>
                     spread(key = type, value = url)
-
+                  
                   if ("team2" %in% colnames(df_schedule_page_links)) {
                     df_schedule_page_links <- df_schedule_page_links |>
                       separate(team2,
-                        into = c("REMOVE", "team2", "REMOVE2"), extra = "merge",
-                        sep = "https://www.maxpreps.com|football/"
+                               into = c("team2", "REMOVE", "REMOVE2"), extra = "merge",
+                               sep = "https://www.maxpreps.com|football/"
                       ) |>
                       select(-c("REMOVE", "REMOVE2"))
                   } else {
                     df_schedule_page_links <- df_schedule_page_links |>
                       mutate(team2 = NA)
                   }
-
-
-
+                  
+                  
+                  
                   if ("game_url" %in% colnames(df_schedule_page_links)) {
                     df_schedule_page_links <- df_schedule_page_links |>
                       separate(game_url,
-                        into = c("REMOVE", "date", "REMOVE2"), extra = "merge",
-                        sep = "https://www.maxpreps.com/games/|/football-|/jv-football-|/freshmen-football-|/freshman-football-",
-                        remove = FALSE
+                               into = c("REMOVE", "date",   "REMOVE2"), extra = "merge",
+                               sep = "https://www.maxpreps.com/games/|/games/|/football-|/jv-football-|/freshmen-football-|/freshman-football-",
+                               remove = FALSE
                       ) |>
                       select(-c("REMOVE", "REMOVE2"))
                   } else {
                     df_schedule_page_links <- df_schedule_page_links |>
                       mutate(date = NA)
                   }
-
+                  
                   df_neutral <- data.frame()
-
+                  
                   for (gu in (df_schedule_page_links |> select(game_url) |> drop_na() |> pull(game_url))) {
-                    game_page <- retry_this(read_html(gu),
-                      sleep_time = 1,
-                      max_tries = 3,
-                      silent = TRUE
+                    game_page <- retry_this(read_html(paste0("https://www.maxpreps.com",gu)),
+                                            sleep_time = 1,
+                                            max_tries = 3,
+                                            silent = TRUE
                     )
-
+                    
                     if (!is.na(game_page)) {
                       df_neutral <- data.frame(
                         is_neutral = game_page |>
@@ -254,13 +254,13 @@ for (season in params$seasons) {
                         bind_rows(df_neutral)
                     }
                   }
-
+                  
                   schedule_table <- schedule_page |>
                     html_table()
-
+                  
                   schedule_table <- schedule_table[[1]] |>
                     filter(!grepl("Opponent TBA", Opponent))
-
+                  
                   if (nrow(schedule_table) == nrow(df_schedule_page_links)) {
                     schedule_table2 <- bind_cols(
                       schedule_table,
@@ -275,7 +275,7 @@ for (season in params$seasons) {
                         team2 = NA
                       )
                   }
-
+                  
                   df_games_temp <- schedule_table2 |>
                     left_join(df_neutral, by = "game_url") |>
                     mutate(
@@ -317,8 +317,8 @@ for (season in params$seasons) {
                     ) |>
                     rename(date_fill = Date) |>
                     select(team1, team2, score1, score2, season, date, game_type, location, level, team2_fill, date_fill)
-
-
+                  
+                  
                   df_games <- df_games_temp |>
                     bind_rows(df_games)
                 }
@@ -329,20 +329,20 @@ for (season in params$seasons) {
         }
       }
     }
-
+    
     df_club <- distinct(df_club)
-
-    write.csv(df_club, paste0("data/raw/high_school/club_20", season, "_TEST.csv"), row.names = F)
-
-
+    
+    write.csv(df_club, paste0("data/raw/high_school/club_20", season, ".csv"), row.names = F)
+    
+    
     df_games <- distinct(df_games)
-
-
+    
+    
     if (!file.exists(paste0("data/raw/high_school/20", season))) {
       dir.create(paste0("data/raw/20", season))
     }
-
-    write.csv(df_games, paste0("data/raw/high_school/20", season, "/games_", state, "_TEST.csv"), row.names = F)
+    
+    write.csv(df_games, paste0("data/raw/high_school/20", season, "/games_", state, ".csv"), row.names = F)
   }
   
 }
